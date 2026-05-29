@@ -1,0 +1,1372 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AQUA-AI – Industrial ETP/STP/WTP/ZLD Design & Simulation Platform</title>
+<style>
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+:root{
+--bg:#070C14;--surface:#111C2E;--border:#1E3050;--text:#E0E8F0;--text-dim:#7A8BA0;
+--cyan:#00D4FF;--green:#00FF9C;--amber:#FFB800;--rose:#FF4060;--purple:#B060FF;
+--sidebar-w:224px;--sidebar-collapsed:64px;--header-h:56px;
+}
+@font-face{font-family:'Inter';src:local('Inter')}
+body{font-family:'Inter','Segoe UI',system-ui,-apple-system,sans-serif;background:var(--bg);color:var(--text);overflow:hidden;width:100vw;height:100vh;display:flex;flex-direction:column;font-size:13px;line-height:1.5}
+::-webkit-scrollbar{width:6px;height:6px}
+::-webkit-scrollbar-track{background:var(--bg)}
+::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
+::-webkit-scrollbar-thumb:hover{background:#2A4060}
+
+/* HEADER */
+.header{height:var(--header-h);min-height:var(--header-h);background:var(--surface);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 20px;gap:16px;z-index:100}
+.header-logo{display:flex;align-items:center;gap:10px;font-size:18px;font-weight:800;letter-spacing:1px}
+.header-logo .logo-icon{width:32px;height:32px;background:linear-gradient(135deg,var(--cyan),var(--purple));border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:900;color:#000}
+.header-tokens{display:flex;gap:8px;margin-left:auto;align-items:center}
+.token{padding:4px 12px;background:rgba(0,212,255,.08);border:1px solid rgba(0,212,255,.2);border-radius:20px;font-size:11px;color:var(--cyan);white-space:nowrap}
+.token.green{background:rgba(0,255,156,.08);border-color:rgba(0,255,156,.2);color:var(--green)}
+.token.amber{background:rgba(255,184,0,.08);border-color:rgba(255,184,0,.2);color:var(--amber)}
+.token.rose{background:rgba(255,64,96,.08);border-color:rgba(255,64,96,.2);color:var(--rose)}
+.header-actions{display:flex;gap:8px;align-items:center}
+.btn-icon{width:36px;height:36px;border-radius:8px;border:1px solid var(--border);background:transparent;color:var(--text-dim);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .2s}
+.btn-icon:hover{background:var(--border);color:var(--text)}
+.sidebar-toggle{display:flex}
+
+/* LAYOUT */
+.app-body{display:flex;flex:1;overflow:hidden}
+
+/* SIDEBAR */
+.sidebar{width:var(--sidebar-w);min-width:var(--sidebar-w);background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column;transition:all .3s cubic-bezier(.4,0,.2,1);overflow:hidden;z-index:90}
+.sidebar.collapsed{width:var(--sidebar-collapsed);min-width:var(--sidebar-collapsed)}
+.sidebar-nav{flex:1;padding:8px;display:flex;flex-direction:column;gap:2px;overflow-y:auto;overflow-x:hidden}
+.nav-item{display:flex;align-items:center;gap:12px;padding:10px 12px;border-radius:8px;cursor:pointer;transition:all .2s;white-space:nowrap;user-select:none;border:1px solid transparent}
+.nav-item:hover{background:rgba(0,212,255,.05);border-color:rgba(0,212,255,.1)}
+.nav-item.active{background:rgba(0,212,255,.1);border-color:rgba(0,212,255,.25)}
+.nav-item .nav-icon{width:24px;height:24px;min-width:24px;display:flex;align-items:center;justify-content:center;font-size:16px}
+.nav-item .nav-label{font-size:12.5px;font-weight:500;opacity:1;transition:opacity .2s}
+.sidebar.collapsed .nav-label{opacity:0;pointer-events:none}
+.nav-item.active .nav-icon{color:var(--cyan)}
+.nav-separator{height:1px;background:var(--border);margin:8px 4px}
+.sidebar-footer{padding:12px;border-top:1px solid var(--border);font-size:10px;color:var(--text-dim);text-align:center;white-space:nowrap;overflow:hidden}
+.sidebar.collapsed .sidebar-footer span{display:none}
+
+/* MAIN CONTENT */
+.main-content{flex:1;overflow:hidden;display:flex;flex-direction:column;position:relative}
+.page{display:none;flex-direction:column;flex:1;overflow-y:auto;padding:24px;gap:20px}
+.page.active{display:flex}
+
+/* CARDS */
+.card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:20px;transition:border-color .3s}
+.card:hover{border-color:#2A4060}
+.card-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
+.card-title{font-size:14px;font-weight:700;display:flex;align-items:center;gap:8px}
+.card-title .ct-icon{color:var(--cyan)}
+.card-badge{padding:3px 10px;border-radius:12px;font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.5px}
+.badge-cyan{background:rgba(0,212,255,.12);color:var(--cyan)}
+.badge-green{background:rgba(0,255,156,.12);color:var(--green)}
+.badge-amber{background:rgba(255,184,0,.12);color:var(--amber)}
+.badge-rose{background:rgba(255,64,96,.12);color:var(--rose)}
+.badge-purple{background:rgba(176,96,255,.12);color:var(--purple)}
+
+/* FORM ELEMENTS */
+.form-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:14px}
+.form-group{display:flex;flex-direction:column;gap:5px}
+.form-label{font-size:11px;font-weight:600;color:var(--text-dim);text-transform:uppercase;letter-spacing:.5px;display:flex;align-items:center;gap:4px}
+.form-label .unit{color:var(--cyan);font-weight:400;text-transform:none}
+.form-input,.form-select{background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:9px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;transition:border-color .2s,box-shadow .2s}
+.form-input:focus,.form-select:focus{border-color:var(--cyan);box-shadow:0 0 0 3px rgba(0,212,255,.1)}
+.form-input.ck-fail{border-color:var(--rose);box-shadow:0 0 0 3px rgba(255,64,96,.1)}
+.form-input.ck-warn{border-color:var(--amber);box-shadow:0 0 0 3px rgba(255,184,0,.1)}
+.form-select{cursor:pointer;-webkit-appearance:none;appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%237A8BA0' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 10px center}
+.form-select option{background:var(--surface);color:var(--text)}
+.checkbox-group{display:flex;align-items:center;gap:8px;cursor:pointer;padding:9px 0}
+.checkbox-group input[type="checkbox"]{appearance:none;width:18px;height:18px;border:2px solid var(--border);border-radius:4px;cursor:pointer;position:relative;transition:all .2s}
+.checkbox-group input[type="checkbox"]:checked{background:var(--cyan);border-color:var(--cyan)}
+.checkbox-group input[type="checkbox"]:checked::after{content:'✓';position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);color:#000;font-size:11px;font-weight:800}
+
+/* BUTTONS */
+.btn{padding:10px 20px;border-radius:8px;border:1px solid var(--border);background:transparent;color:var(--text);font-size:13px;font-weight:600;font-family:inherit;cursor:pointer;transition:all .2s;display:inline-flex;align-items:center;gap:8px}
+.btn:hover{background:var(--border)}
+.btn-primary{background:linear-gradient(135deg,var(--cyan),#0090B0);border-color:var(--cyan);color:#000}
+.btn-primary:hover{box-shadow:0 0 20px rgba(0,212,255,.3);transform:translateY(-1px)}
+.btn-green{background:rgba(0,255,156,.12);border-color:rgba(0,255,156,.3);color:var(--green)}
+.btn-amber{background:rgba(255,184,0,.12);border-color:rgba(255,184,0,.3);color:var(--amber)}
+.btn-rose{background:rgba(255,64,96,.12);border-color:rgba(255,64,96,.3);color:var(--rose)}
+.btn-sm{padding:6px 14px;font-size:11px;border-radius:6px}
+.btn-group{display:flex;gap:8px;flex-wrap:wrap}
+
+/* METRIC CARDS */
+.metrics-row{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:14px}
+.metric-card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:16px;display:flex;flex-direction:column;gap:4px}
+.metric-card .mc-label{font-size:10px;color:var(--text-dim);text-transform:uppercase;letter-spacing:.5px;font-weight:600}
+.metric-card .mc-value{font-size:22px;font-weight:800;font-variant-numeric:tabular-nums}
+.metric-card .mc-sub{font-size:11px;color:var(--text-dim)}
+.mc-cyan .mc-value{color:var(--cyan)}
+.mc-green .mc-value{color:var(--green)}
+.mc-amber .mc-value{color:var(--amber)}
+.mc-rose .mc-value{color:var(--rose)}
+.mc-purple .mc-value{color:var(--purple)}
+
+/* RADIAL PROGRESS */
+.radial-wrap{display:flex;align-items:center;gap:16px}
+.radial{width:72px;height:72px;position:relative}
+.radial svg{width:100%;height:100%;transform:rotate(-90deg)}
+.radial-bg{fill:none;stroke:var(--border);stroke-width:6}
+.radial-fg{fill:none;stroke-width:6;stroke-linecap:round;transition:stroke-dashoffset .8s cubic-bezier(.4,0,.2,1)}
+.radial-text{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-size:14px;font-weight:800}
+.radial-info{display:flex;flex-direction:column;gap:2px}
+.radial-info .ri-label{font-size:12px;font-weight:600}
+.radial-info .ri-sub{font-size:10px;color:var(--text-dim)}
+
+/* PROGRESS BAR */
+.progress-bar-wrap{display:flex;flex-direction:column;gap:4px}
+.progress-bar-label{display:flex;justify-content:space-between;font-size:11px}
+.progress-bar-track{height:8px;background:var(--bg);border-radius:4px;overflow:hidden}
+.progress-bar-fill{height:100%;border-radius:4px;transition:width .6s cubic-bezier(.4,0,.2,1)}
+
+/* TABLE */
+.data-table{width:100%;border-collapse:collapse;font-size:12px}
+.data-table thead th{text-align:left;padding:10px 12px;background:var(--bg);border-bottom:2px solid var(--border);font-size:10px;text-transform:uppercase;letter-spacing:.5px;color:var(--text-dim);font-weight:700;position:sticky;top:0;z-index:2}
+.data-table tbody td{padding:9px 12px;border-bottom:1px solid rgba(30,48,80,.5)}
+.data-table tbody tr:hover{background:rgba(0,212,255,.03)}
+.data-table .num{text-align:right;font-variant-numeric:tabular-nums;font-weight:600}
+
+/* PFD CANVAS */
+.pfd-canvas{position:relative;min-height:400px;background:var(--bg);border:1px solid var(--border);border-radius:12px;overflow:auto;padding:20px}
+.pfd-node{position:absolute;background:var(--surface);border:2px solid var(--border);border-radius:10px;padding:12px 16px;min-width:120px;text-align:center;cursor:default;transition:all .3s;z-index:2}
+.pfd-node:hover{border-color:var(--cyan);box-shadow:0 0 15px rgba(0,212,255,.15)}
+.pfd-node .pn-icon{font-size:20px;margin-bottom:4px}
+.pfd-node .pn-name{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.3px}
+.pfd-node .pn-detail{font-size:9px;color:var(--text-dim);margin-top:2px}
+.pfd-node.node-cyan{border-color:rgba(0,212,255,.4)}
+.pfd-node.node-green{border-color:rgba(0,255,156,.4)}
+.pfd-node.node-amber{border-color:rgba(255,184,0,.4)}
+.pfd-node.node-rose{border-color:rgba(255,64,96,.4)}
+.pfd-node.node-purple{border-color:rgba(176,96,255,.4)}
+
+/* PFD SVG CONNECTORS */
+.pfd-connectors{position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:1}
+.pfd-connectors line,.pfd-connectors path{stroke:var(--cyan);stroke-width:2;fill:none;opacity:.5}
+.pfd-connectors .arrow{fill:var(--cyan);opacity:.5}
+
+/* VALIDATION */
+.validation-list{display:flex;flex-direction:column;gap:8px}
+.val-item{display:flex;align-items:flex-start;gap:10px;padding:10px 14px;border-radius:8px;font-size:12px}
+.val-item.val-pass{background:rgba(0,255,156,.06);border:1px solid rgba(0,255,156,.15)}
+.val-item.val-warn{background:rgba(255,184,0,.06);border:1px solid rgba(255,184,0,.15)}
+.val-item.val-fail{background:rgba(255,64,96,.06);border:1px solid rgba(255,64,96,.15)}
+.val-icon{font-size:16px;min-width:20px;text-align:center}
+.val-pass .val-icon{color:var(--green)}
+.val-warn .val-icon{color:var(--amber)}
+.val-fail .val-icon{color:var(--rose)}
+.val-content{flex:1}
+.val-content .val-title{font-weight:700;margin-bottom:2px}
+.val-content .val-desc{color:var(--text-dim);font-size:11px}
+
+/* TABS */
+.tab-bar{display:flex;gap:0;border-bottom:2px solid var(--border);margin-bottom:16px}
+.tab-item{padding:10px 20px;font-size:12px;font-weight:600;cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-2px;transition:all .2s;color:var(--text-dim)}
+.tab-item:hover{color:var(--text)}
+.tab-item.active{color:var(--cyan);border-bottom-color:var(--cyan)}
+.tab-pane{display:none}
+.tab-pane.active{display:block}
+
+/* ANIMATIONS */
+@keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.5}}
+@keyframes glow{0%,100%{box-shadow:0 0 5px rgba(0,212,255,.2)}50%{box-shadow:0 0 20px rgba(0,212,255,.4)}}
+.page.active{animation:fadeIn .3s ease}
+.pulse{animation:pulse 2s infinite}
+.glow{animation:glow 2s infinite}
+
+/* SECTION DIVIDER */
+.section-title{font-size:16px;font-weight:800;display:flex;align-items:center;gap:10px;margin-bottom:4px}
+.section-title::after{content:'';flex:1;height:1px;background:linear-gradient(90deg,var(--border),transparent)}
+
+/* STATUS DOT */
+.status-dot{width:8px;height:8px;border-radius:50%;display:inline-block}
+.dot-green{background:var(--green);box-shadow:0 0 6px var(--green)}
+.dot-amber{background:var(--amber);box-shadow:0 0 6px var(--amber)}
+.dot-rose{background:var(--rose);box-shadow:0 0 6px var(--rose)}
+.dot-cyan{background:var(--cyan);box-shadow:0 0 6px var(--cyan)}
+
+/* SPLIT */
+.split-2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.split-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px}
+@media(max-width:900px){.split-2,.split-3{grid-template-columns:1fr}}
+
+/* TOOLTIP */
+[data-tip]{position:relative}
+[data-tip]:hover::after{content:attr(data-tip);position:absolute;bottom:100%;left:50%;transform:translateX(-50%);background:var(--surface);border:1px solid var(--border);padding:4px 10px;border-radius:6px;font-size:10px;white-space:nowrap;z-index:999;pointer-events:none}
+
+/* FLOW ANIM LINE */
+.flow-line{stroke-dasharray:8 4;animation:flowDash 1s linear infinite}
+@keyframes flowDash{to{stroke-dashoffset:-12}}
+
+/* MARKDOWN RENDERED */
+.md-render h3{font-size:15px;font-weight:700;margin:12px 0 6px;color:var(--cyan)}
+.md-render strong{color:var(--text);font-weight:700}
+.md-render code{background:rgba(0,212,255,.1);padding:2px 6px;border-radius:4px;font-size:12px;color:var(--cyan);font-family:'Fira Code',monospace}
+.md-render table{width:100%;border-collapse:collapse;margin:8px 0}
+.md-render table th{background:var(--bg);padding:8px 10px;text-align:left;font-size:11px;text-transform:uppercase;border-bottom:2px solid var(--border);color:var(--text-dim)}
+.md-render table td{padding:7px 10px;border-bottom:1px solid rgba(30,48,80,.4);font-size:12px}
+.md-render p{margin:6px 0;color:var(--text-dim)}
+.md-render ul,.md-render ol{padding-left:20px;margin:6px 0}
+.md-render li{margin:3px 0;color:var(--text-dim);font-size:12px}
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header class="header">
+  <div class="header-logo">
+    <div class="logo-icon">A</div>
+    <span>AQUA-<span style="color:var(--cyan)">AI</span></span>
+  </div>
+  <div class="header-tokens" id="headerTokens">
+    <span class="token" id="tokenIndustry">Industry: —</span>
+    <span class="token green" id="tokenCapacity">0 m³/d</span>
+    <span class="token amber" id="tokenMode">Mode: ETP</span>
+  </div>
+  <div class="header-actions">
+    <button class="btn-icon" id="btnToggleSidebar" title="Toggle Sidebar">☰</button>
+    <button class="btn-icon" title="Export Report" onclick="exportReport()">📄</button>
+    <button class="btn-icon" title="Reset All" onclick="resetAll()">🔄</button>
+  </div>
+</header>
+
+<!-- BODY -->
+<div class="app-body">
+  <!-- SIDEBAR -->
+  <nav class="sidebar" id="sidebar">
+    <div class="sidebar-nav">
+      <div class="nav-item active" data-page="dashboard" onclick="navigateTo('dashboard',this)">
+        <div class="nav-icon">📊</div><span class="nav-label">Dashboard</span>
+      </div>
+      <div class="nav-item" data-page="design" onclick="navigateTo('design',this)">
+        <div class="nav-icon">🔬</div><span class="nav-label">AI Design Engine</span>
+      </div>
+      <div class="nav-item" data-page="pfd" onclick="navigateTo('pfd',this)">
+        <div class="nav-icon">🔗</div><span class="nav-label">Process Flow (PFD)</span>
+      </div>
+      <div class="nav-separator"></div>
+      <div class="nav-item" data-page="simulation" onclick="navigateTo('simulation',this)">
+        <div class="nav-icon">⚙️</div><span class="nav-label">Simulation Matrix</span>
+      </div>
+      <div class="nav-item" data-page="financial" onclick="navigateTo('financial',this)">
+        <div class="nav-icon">💰</div><span class="nav-label">Financial Appraisal</span>
+      </div>
+      <div class="nav-item" data-page="validation" onclick="navigateTo('validation',this)">
+        <div class="nav-icon">✅</div><span class="nav-label">Validation Engine</span>
+      </div>
+      <div class="nav-separator"></div>
+      <div class="nav-item" data-page="report" onclick="navigateTo('report',this)">
+        <div class="nav-icon">📋</div><span class="nav-label">Report Generator</span>
+      </div>
+    </div>
+    <div class="sidebar-footer">
+      <span>AQUA-AI v2.0 · Industrial Platform</span>
+    </div>
+  </nav>
+
+  <!-- MAIN -->
+  <main class="main-content">
+
+    <!-- =================== PAGE: DASHBOARD =================== -->
+    <div class="page active" id="page-dashboard">
+      <div class="section-title">📊 System Dashboard</div>
+      <div class="metrics-row" id="dashMetrics">
+        <div class="metric-card mc-cyan"><div class="mc-label">Design Flow Rate</div><div class="mc-value" id="dashFlow">—</div><div class="mc-sub">m³/day</div></div>
+        <div class="metric-card mc-green"><div class="mc-label">COD Removal</div><div class="mc-value" id="dashCODRemoval">—</div><div class="mc-sub">% efficiency</div></div>
+        <div class="metric-card mc-amber"><div class="mc-label">Process Units</div><div class="mc-value" id="dashUnits">0</div><div class="mc-sub">active stages</div></div>
+        <div class="metric-card mc-purple"><div class="mc-label">Membrane Recovery</div><div class="mc-value" id="dashRecovery">—</div><div class="mc-sub">% water recovery</div></div>
+        <div class="metric-card mc-rose"><div class="mc-label">Daily Sludge</div><div class="mc-value" id="dashSludge">—</div><div class="mc-sub">kg/day dry solids</div></div>
+        <div class="metric-card mc-cyan"><div class="mc-label">CAPEX Estimate</div><div class="mc-value" id="dashCapex">—</div><div class="mc-sub">₹ Lakhs</div></div>
+      </div>
+      <div class="split-2">
+        <div class="card">
+          <div class="card-header"><div class="card-title"><span class="ct-icon">⚡</span> System Efficiency Indicators</div></div>
+          <div id="dashRadials" style="display:flex;flex-direction:column;gap:16px">
+            <!-- populated by JS -->
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-header"><div class="card-title"><span class="ct-icon">📈</span> Parameter Overview</div></div>
+          <div id="dashBars" style="display:flex;flex-direction:column;gap:12px">
+            <!-- populated by JS -->
+          </div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-header"><div class="card-title"><span class="ct-icon">🔔</span> Validation Summary</div></div>
+        <div id="dashValidationSummary" class="validation-list">
+          <div class="val-item val-warn"><div class="val-icon">⚠️</div><div class="val-content"><div class="val-title">No design inputs configured</div><div class="val-desc">Navigate to AI Design Engine to configure project parameters.</div></div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- =================== PAGE: AI DESIGN ENGINE =================== -->
+    <div class="page" id="page-design">
+      <div class="section-title">🔬 AI Design Engine – Input Parameters</div>
+
+      <div class="card">
+        <div class="card-header"><div class="card-title"><span class="ct-icon">🏭</span> Project Configuration</div><span class="card-badge badge-cyan">CORE</span></div>
+        <div class="form-grid">
+          <div class="form-group">
+            <label class="form-label">Industry Type</label>
+            <select class="form-select" id="inIndustry" onchange="onInputChange()">
+              <option value="">Select Industry...</option>
+              <option value="Textile">Textile & Dyeing</option>
+              <option value="Pharmaceutical">Pharmaceutical</option>
+              <option value="Food Processing">Food Processing</option>
+              <option value="Dairy">Dairy</option>
+              <option value="Petrochemical">Petrochemical</option>
+              <option value="Pulp & Paper">Pulp & Paper</option>
+              <option value="Steel">Steel & Metal</option>
+              <option value="Tannery">Tannery / Leather</option>
+              <option value="Municipal">Municipal STP</option>
+              <option value="Distillery">Distillery</option>
+              <option value="Sugar">Sugar Mill</option>
+              <option value="Automobile">Automobile</option>
+              <option value="Electronics">Electronics</option>
+              <option value="Power Plant">Power Plant</option>
+              <option value="Custom">Custom / Other</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Plant Mode</label>
+            <select class="form-select" id="inMode" onchange="onInputChange()">
+              <option value="ETP">ETP – Effluent Treatment</option>
+              <option value="STP">STP – Sewage Treatment</option>
+              <option value="WTP">WTP – Water Treatment</option>
+              <option value="ZLD">ZLD – Zero Liquid Discharge</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Flow Rate <span class="unit">(m³/day)</span></label>
+            <input type="number" class="form-input" id="inFlow" value="500" min="1" max="100000" onchange="onInputChange()" oninput="onInputChange()">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Design Temperature <span class="unit">(°C)</span></label>
+            <input type="number" class="form-input" id="inTemp" value="30" min="5" max="55" onchange="onInputChange()">
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header"><div class="card-title"><span class="ct-icon">🧪</span> Influent Characterization</div><span class="card-badge badge-amber">PARAMETERS</span></div>
+        <div class="form-grid">
+          <div class="form-group"><label class="form-label">Inlet COD <span class="unit">(mg/L)</span></label><input type="number" class="form-input" id="inCOD" value="1200" min="0" max="100000" onchange="onInputChange()"></div>
+          <div class="form-group"><label class="form-label">Inlet BOD <span class="unit">(mg/L)</span></label><input type="number" class="form-input" id="inBOD" value="400" min="0" max="50000" onchange="onInputChange()"></div>
+          <div class="form-group"><label class="form-label">TSS <span class="unit">(mg/L)</span></label><input type="number" class="form-input" id="inTSS" value="350" min="0" max="50000" onchange="onInputChange()"></div>
+          <div class="form-group"><label class="form-label">TDS <span class="unit">(mg/L)</span></label><input type="number" class="form-input" id="inTDS" value="3000" min="0" max="100000" onchange="onInputChange()"></div>
+          <div class="form-group"><label class="form-label">pH</label><input type="number" class="form-input" id="inpH" value="7.2" min="0" max="14" step="0.1" onchange="onInputChange()"></div>
+          <div class="form-group"><label class="form-label">Ammonia-N <span class="unit">(mg/L)</span></label><input type="number" class="form-input" id="inNH3" value="25" min="0" max="5000" onchange="onInputChange()"></div>
+          <div class="form-group"><label class="form-label">Phosphorus <span class="unit">(mg/L)</span></label><input type="number" class="form-input" id="inPhos" value="8" min="0" max="1000" onchange="onInputChange()"></div>
+          <div class="form-group"><label class="form-label">Oil & Grease <span class="unit">(mg/L)</span></label><input type="number" class="form-input" id="inOG" value="20" min="0" max="5000" onchange="onInputChange()"></div>
+          <div class="form-group"><label class="form-label">Color <span class="unit">(Pt-Co)</span></label><input type="number" class="form-input" id="inColor" value="100" min="0" max="10000" onchange="onInputChange()"></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header"><div class="card-title"><span class="ct-icon">📋</span> Discharge Standards / Custom Limits</div><span class="card-badge badge-green">COMPLIANCE</span></div>
+        <div class="form-grid">
+          <div class="form-group"><label class="form-label">Outlet COD Limit <span class="unit">(mg/L)</span></label><input type="number" class="form-input" id="outCOD" value="250" min="0" onchange="onInputChange()"></div>
+          <div class="form-group"><label class="form-label">Outlet BOD Limit <span class="unit">(mg/L)</span></label><input type="number" class="form-input" id="outBOD" value="30" min="0" onchange="onInputChange()"></div>
+          <div class="form-group"><label class="form-label">Outlet TSS Limit <span class="unit">(mg/L)</span></label><input type="number" class="form-input" id="outTSS" value="100" min="0" onchange="onInputChange()"></div>
+          <div class="form-group"><label class="form-label">Outlet TDS Limit <span class="unit">(mg/L)</span></label><input type="number" class="form-input" id="outTDS" value="2100" min="0" onchange="onInputChange()"></div>
+          <div class="form-group"><label class="form-label">Outlet pH Min</label><input type="number" class="form-input" id="outpHMin" value="5.5" min="0" max="14" step="0.1" onchange="onInputChange()"></div>
+          <div class="form-group"><label class="form-label">Outlet pH Max</label><input type="number" class="form-input" id="outpHMax" value="9.0" min="0" max="14" step="0.1" onchange="onInputChange()"></div>
+        </div>
+      </div>
+
+      <div class="btn-group" style="justify-content:flex-end">
+        <button class="btn btn-primary" onclick="runDesignEngine()">🚀 Run AI Design Engine</button>
+        <button class="btn btn-green" onclick="navigateTo('pfd',document.querySelector('[data-page=pfd]'))">View PFD →</button>
+      </div>
+    </div>
+
+    <!-- =================== PAGE: PFD =================== -->
+    <div class="page" id="page-pfd">
+      <div class="section-title">🔗 Process Flow Diagram (PFD)</div>
+      <div class="card" style="padding:8px">
+        <div class="card-header" style="padding:12px 12px 0"><div class="card-title"><span class="ct-icon">🔗</span> AI-Generated Process Train</div><span class="card-badge badge-cyan" id="pfdUnitCount">0 units</span></div>
+        <div class="pfd-canvas" id="pfdCanvas" style="min-height:450px">
+          <svg class="pfd-connectors" id="pfdSvg"></svg>
+          <div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);color:var(--text-dim);font-size:13px" id="pfdPlaceholder">Configure inputs and run AI Design Engine to generate PFD</div>
+        </div>
+      </div>
+      <div class="card" id="pfdDetails" style="display:none">
+        <div class="card-header"><div class="card-title"><span class="ct-icon">📝</span> Unit Specifications</div></div>
+        <div class="md-render" id="pfdSpecsContent"></div>
+      </div>
+    </div>
+
+    <!-- =================== PAGE: SIMULATION =================== -->
+    <div class="page" id="page-simulation">
+      <div class="section-title">⚙️ Engineering Simulation Matrix</div>
+      <div class="metrics-row" id="simMetrics"></div>
+      <div class="split-2">
+        <div class="card">
+          <div class="card-header"><div class="card-title"><span class="ct-icon">🌀</span> Biological Reactor Parameters</div><span class="card-badge badge-green">BIO</span></div>
+          <div id="simBioParams" style="display:flex;flex-direction:column;gap:14px"></div>
+        </div>
+        <div class="card">
+          <div class="card-header"><div class="card-title"><span class="ct-icon">💨</span> Aeration & Oxygen Requirements</div><span class="card-badge badge-cyan">AERATION</span></div>
+          <div id="simAeration" style="display:flex;flex-direction:column;gap:14px"></div>
+        </div>
+      </div>
+      <div class="split-2">
+        <div class="card">
+          <div class="card-header"><div class="card-title"><span class="ct-icon">🧪</span> Chemical Dosing Matrix</div><span class="card-badge badge-amber">CHEM</span></div>
+          <div id="simChemDosing"></div>
+        </div>
+        <div class="card">
+          <div class="card-header"><div class="card-title"><span class="ct-icon" style="color:var(--rose)">🔴</span> Sludge Production & Handling</div><span class="card-badge badge-rose">SLUDGE</span></div>
+          <div id="simSludge" style="display:flex;flex-direction:column;gap:14px"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- =================== PAGE: FINANCIAL =================== -->
+    <div class="page" id="page-financial">
+      <div class="section-title">💰 Financial Appraisal Module</div>
+      <div class="card">
+        <div class="card-header"><div class="card-title"><span class="ct-icon">⚙️</span> Financial Parameters</div></div>
+        <div class="form-grid">
+          <div class="form-group"><label class="form-label">CAPEX <span class="unit">(₹ Lakhs)</span></label><input type="number" class="form-input" id="finCapex" value="150" min="0" onchange="runFinancialModel()"></div>
+          <div class="form-group"><label class="form-label">Annual OPEX <span class="unit">(₹ Lakhs)</span></label><input type="number" class="form-input" id="finOpex" value="18" min="0" onchange="runFinancialModel()"></div>
+          <div class="form-group"><label class="form-label">Project Lifespan <span class="unit">(Years)</span></label><input type="number" class="form-input" id="finLife" value="20" min="1" max="50" onchange="runFinancialModel()"></div>
+          <div class="form-group"><label class="form-label">Discount Rate <span class="unit">(%)</span></label><input type="number" class="form-input" id="finDiscount" value="10" min="0" max="50" step="0.5" onchange="runFinancialModel()"></div>
+          <div class="form-group"><label class="form-label">Water Recovery Tariff <span class="unit">(₹/m³)</span></label><input type="number" class="form-input" id="finTariff" value="35" min="0" onchange="runFinancialModel()"></div>
+          <div class="form-group"><label class="form-label">Water Recovery Rate <span class="unit">(%)</span></label><input type="number" class="form-input" id="finRecovery" value="80" min="0" max="100" onchange="runFinancialModel()"></div>
+          <div class="form-group"><label class="form-label">Operating Days/Year</label><input type="number" class="form-input" id="finDays" value="330" min="1" max="365" onchange="runFinancialModel()"></div>
+        </div>
+      </div>
+      <div class="metrics-row" id="finSummaryMetrics"></div>
+      <div class="card">
+        <div class="card-header"><div class="card-title"><span class="ct-icon">📊</span> Multi-Decade Cash Flow Analysis</div><span class="card-badge badge-cyan">NPV MODEL</span></div>
+        <div style="overflow-x:auto">
+          <table class="data-table" id="finCashFlowTable">
+            <thead><tr><th>Year</th><th>Revenue (₹L)</th><th>OPEX (₹L)</th><th>Net CF (₹L)</th><th>Cumulative (₹L)</th><th>Disc. CF (₹L)</th><th>Cum. NPV (₹L)</th></tr></thead>
+            <tbody id="finCashFlowBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- =================== PAGE: VALIDATION =================== -->
+    <div class="page" id="page-validation">
+      <div class="section-title">✅ Hardened Validation Engine</div>
+      <div class="card">
+        <div class="card-header"><div class="card-title"><span class="ct-icon">🛡️</span> Compliance & Boundary Checks</div><span class="card-badge badge-green" id="valBadge">—</span></div>
+        <div class="validation-list" id="valList"></div>
+      </div>
+      <div class="card" id="valDiagCard" style="display:none">
+        <div class="card-header"><div class="card-title"><span class="ct-icon" style="color:var(--rose)">🔧</span> Diagnostic Modification Checklist</div></div>
+        <div class="md-render" id="valDiagContent"></div>
+      </div>
+    </div>
+
+    <!-- =================== PAGE: REPORT =================== -->
+    <div class="page" id="page-report">
+      <div class="section-title">📋 Comprehensive Report</div>
+      <div class="card">
+        <div class="card-header"><div class="card-title"><span class="ct-icon">📄</span> AI-Generated Design Report</div><div class="btn-group"><button class="btn btn-sm btn-primary" onclick="exportReport()">📥 Export</button></div></div>
+        <div class="md-render" id="reportContent">
+          <p>Run the AI Design Engine to generate a comprehensive report.</p>
+        </div>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════════════
+// AQUA-AI: CORE STATE ENGINE
+// ═══════════════════════════════════════════════════════════
+
+const STATE = {
+  inputs: {},
+  processUnits: [],
+  simulation: {},
+  financial: {},
+  validation: [],
+  designed: false
+};
+
+// ═══════════════════════════════════════════════════════════
+// NAVIGATION ENGINE
+// ═══════════════════════════════════════════════════════════
+
+function navigateTo(pageId, navEl) {
+  const views = document.querySelectorAll('.page');
+  const navItems = document.querySelectorAll('.nav-item');
+  for (let i = 0; i < views.length; i++) {
+    views[i].style.display = 'none';
+    views[i].classList.remove('active');
+  }
+  for (let i = 0; i < navItems.length; i++) {
+    navItems[i].classList.remove('active');
+  }
+  const target = document.getElementById('page-' + pageId);
+  if (target) {
+    target.style.display = 'flex';
+    target.classList.add('active');
+  }
+  if (navEl) navEl.classList.add('active');
+  if (pageId === 'simulation' && STATE.designed) renderSimulation();
+  if (pageId === 'financial') runFinancialModel();
+  if (pageId === 'validation' && STATE.designed) runValidation();
+  if (pageId === 'dashboard' && STATE.designed) renderDashboard();
+  if (pageId === 'report' && STATE.designed) renderReport();
+}
+
+// Sidebar Toggle
+document.getElementById('btnToggleSidebar').addEventListener('click', () => {
+  document.getElementById('sidebar').classList.toggle('collapsed');
+});
+
+// ═══════════════════════════════════════════════════════════
+// INPUT COLLECTION
+// ═══════════════════════════════════════════════════════════
+
+function collectInputs() {
+  const g = id => {
+    const el = document.getElementById(id);
+    if (!el) return 0;
+    if (el.tagName === 'SELECT') return el.value;
+    return parseFloat(el.value) || 0;
+  };
+  STATE.inputs = {
+    industry: g('inIndustry'),
+    mode: g('inMode'),
+    flow: g('inFlow'),
+    temp: g('inTemp'),
+    cod: g('inCOD'),
+    bod: g('inBOD'),
+    tss: g('inTSS'),
+    tds: g('inTDS'),
+    ph: g('inpH'),
+    nh3: g('inNH3'),
+    phos: g('inPhos'),
+    og: g('inOG'),
+    color: g('inColor'),
+    outCOD: g('outCOD'),
+    outBOD: g('outBOD'),
+    outTSS: g('outTSS'),
+    outTDS: g('outTDS'),
+    outpHMin: g('outpHMin'),
+    outpHMax: g('outpHMax')
+  };
+  updateHeaderTokens();
+}
+
+function onInputChange() {
+  collectInputs();
+}
+
+function updateHeaderTokens() {
+  const inp = STATE.inputs;
+  document.getElementById('tokenIndustry').textContent = 'Industry: ' + (inp.industry || '—');
+  document.getElementById('tokenCapacity').textContent = (inp.flow || 0) + ' m³/d';
+  document.getElementById('tokenMode').textContent = 'Mode: ' + (inp.mode || 'ETP');
+}
+
+// ═══════════════════════════════════════════════════════════
+// AI DESIGN ENGINE – PFD GENERATOR
+// ═══════════════════════════════════════════════════════════
+
+function runDesignEngine() {
+  collectInputs();
+  const inp = STATE.inputs;
+  if (!inp.industry || !inp.flow) {
+    alert('Please select Industry Type and enter Flow Rate.');
+    return;
+  }
+  const units = [];
+  const addUnit = (id, name, icon, color, detail) => units.push({id, name, icon, color, detail});
+
+  // 1. Inlet Chamber (always)
+  addUnit('inlet', 'Inlet Chamber', '🔵', 'cyan', `Q=${inp.flow} m³/d`);
+
+  // 2. Bar Screen / Screening
+  addUnit('screen', 'Bar Screen', '🔩', 'cyan', 'Coarse: 25mm, Fine: 6mm');
+
+  // 3. Oil & Grease Trap / DAF
+  if (inp.og > 100) {
+    addUnit('daf', 'DAF Unit', '💨', 'amber', `O&G: ${inp.og} mg/L → <20 mg/L`);
+  } else if (inp.og > 30) {
+    addUnit('ogt', 'Oil & Grease Trap', '🛢️', 'amber', `O&G: ${inp.og} mg/L`);
+  }
+
+  // 4. Equalization Tank
+  addUnit('eq', 'Equalization Tank', '🔄', 'cyan', `HRT: ${Math.max(6, Math.min(24, Math.round(inp.flow > 1000 ? 8 : 12)))} hrs`);
+
+  // 5. pH Correction / Flash Mixer
+  if (inp.ph < 6.0 || inp.ph > 9.5) {
+    addUnit('ph_correct', 'pH Correction', '⚗️', 'amber', `pH ${inp.ph} → 7.0-7.5`);
+  }
+
+  // 6. Primary Clarifier (high TSS)
+  if (inp.tss > 500) {
+    addUnit('psc', 'Primary Clarifier', '🔽', 'cyan', `TSS ${inp.tss} → ${Math.round(inp.tss * 0.4)} mg/L`);
+  }
+
+  // 7. Coagulation-Flocculation (high color/TSS)
+  if (inp.color > 200 || inp.tss > 800 || ['Textile', 'Tannery', 'Pulp & Paper'].includes(inp.industry)) {
+    addUnit('coag', 'Coagulation & Flocculation', '🧪', 'amber', `Alum dose: ${Math.round(inp.tss * 0.15 + inp.color * 0.08)} mg/L`);
+    addUnit('tube', 'Tube Settler / Lamella', '📐', 'amber', `Surface Loading: 1.5 m³/m²/h`);
+  }
+
+  // 8. Anaerobic Treatment (UASB/Anaerobic Reactor) for high COD
+  const effectiveCOD = inp.tss > 500 ? inp.cod * 0.7 : inp.cod;
+  if (inp.cod > 5000) {
+    addUnit('uasb', 'UASB Reactor', '🟤', 'green', `OLR: ${(effectiveCOD * inp.flow / 1000 / (inp.flow * 0.5 / 1000)).toFixed(1)} kgCOD/m³·d\nBiogas: ${Math.round(effectiveCOD * inp.flow * 0.35 / 1000)} m³/d`);
+  } else if (inp.cod > 3000) {
+    addUnit('anaerobic', 'Anaerobic Reactor', '🟤', 'green', `COD reduction: ~70%`);
+  }
+
+  // 9. Aerobic Treatment
+  const codAfterAnaerobic = inp.cod > 5000 ? effectiveCOD * 0.2 : (inp.cod > 3000 ? effectiveCOD * 0.3 : effectiveCOD);
+  if (inp.flow > 2000 || inp.industry === 'Municipal') {
+    addUnit('asp', 'ASP (Activated Sludge)', '🌿', 'green', `F/M: 0.2-0.4 kgBOD/kgMLSS·d\nHRT: ${Math.round(Math.max(6, 24 * inp.bod / 500))} hrs`);
+  } else {
+    addUnit('mbbr', 'MBBR Reactor', '🌿', 'green', `Media fill: 60%\nHRT: ${Math.round(Math.max(8, 20 * codAfterAnaerobic / 1000))} hrs`);
+  }
+
+  // 10. Nitrification/Denitrification (high ammonia)
+  if (inp.nh3 > 50) {
+    addUnit('ndn', 'Nitrification-Denitrification', '🔁', 'green', `NH₃-N: ${inp.nh3} → <10 mg/L`);
+  }
+
+  // 11. Secondary Clarifier
+  addUnit('ssc', 'Secondary Clarifier', '🔽', 'cyan', `SOR: ${(inp.flow / (Math.PI * Math.pow(Math.sqrt(inp.flow / 24 / 1.2 / Math.PI), 2))).toFixed(1)} m³/m²/d`);
+
+  // 12. Tertiary Treatment
+  if (inp.cod > 1000 || ['Textile', 'Pharmaceutical', 'Tannery'].includes(inp.industry)) {
+    addUnit('psf', 'Pressure Sand Filter', '🏔️', 'cyan', `Rate: 10-12 m³/m²/hr`);
+    addUnit('acf', 'Activated Carbon Filter', '⬛', 'cyan', `Contact time: 15-20 min`);
+  }
+
+  // 13. Membrane Systems
+  const needMembrane = inp.tds > 5000 || inp.mode === 'ZLD' || inp.outTDS < inp.tds * 0.5;
+  const needRO = inp.tds > 2000 || inp.mode === 'ZLD';
+  if (needMembrane || needRO) {
+    addUnit('uf', 'Ultrafiltration (UF)', '🟣', 'purple', `Pore: 0.02 μm\nFlux: 60-80 LMH`);
+    if (inp.tds > 3000 || inp.mode === 'ZLD') {
+      addUnit('ro1', 'RO Stage-1', '🟣', 'purple', `Recovery: 75%\nPermeate TDS: ${Math.round(inp.tds * 0.02)} mg/L`);
+      if (inp.tds > 8000 || inp.mode === 'ZLD') {
+        addUnit('ro2', 'RO Stage-2 (HP)', '🟣', 'purple', `Feed: RO-1 Reject\nPressure: 60-80 bar`);
+      }
+    } else {
+      addUnit('nf', 'Nanofiltration (NF)', '🟣', 'purple', `Recovery: 85%`);
+    }
+  }
+
+  // 14. ZLD Train
+  if (inp.mode === 'ZLD') {
+    addUnit('mee', 'MEE (Multi-Effect Evaporator)', '🔥', 'rose', `Feed: RO Reject\nConcentration: 15-20%`);
+    addUnit('atfd', 'ATFD (Agitated Thin Film Dryer)', '🔥', 'rose', `Residual moisture: <5%`);
+    addUnit('crystal', 'Crystallizer / Salt Recovery', '💎', 'amber', `Salt yield: ${Math.round(inp.tds * inp.flow * 0.25 * 0.001)} kg/d`);
+  }
+
+  // 15. Sludge Handling
+  addUnit('sludge_thk', 'Sludge Thickener', '🔴', 'rose', `Solids: 3-5%`);
+  addUnit('fpd', 'Filter Press / Dewatering', '🔴', 'rose', `Cake: 25-35% DS`);
+
+  // 16. Treated Water Tank / Outlet
+  addUnit('outlet', 'Treated Water Storage', '💧', 'green', `Quality: Discharge / Reuse`);
+
+  STATE.processUnits = units;
+  STATE.designed = true;
+
+  renderPFD();
+  runSimulationCalcs();
+  runFinancialModel();
+  runValidation();
+  renderDashboard();
+
+  navigateTo('pfd', document.querySelector('[data-page=pfd]'));
+}
+
+// ═══════════════════════════════════════════════════════════
+// PFD RENDERER
+// ═══════════════════════════════════════════════════════════
+
+function renderPFD() {
+  const canvas = document.getElementById('pfdCanvas');
+  const svg = document.getElementById('pfdSvg');
+  const placeholder = document.getElementById('pfdPlaceholder');
+  const units = STATE.processUnits;
+
+  if (placeholder) placeholder.style.display = 'none';
+
+  // Remove old nodes
+  canvas.querySelectorAll('.pfd-node').forEach(n => n.remove());
+  svg.innerHTML = '';
+
+  document.getElementById('pfdUnitCount').textContent = units.length + ' units';
+
+  const cols = Math.min(5, Math.ceil(Math.sqrt(units.length * 1.5)));
+  const nodeW = 150, nodeH = 76, gapX = 60, gapY = 55;
+  const startX = 30, startY = 30;
+
+  const positions = [];
+  units.forEach((u, i) => {
+    const row = Math.floor(i / cols);
+    const col = (row % 2 === 0) ? (i % cols) : (cols - 1 - (i % cols)); // serpentine
+    const x = startX + col * (nodeW + gapX);
+    const y = startY + row * (nodeH + gapY);
+    positions.push({x, y, cx: x + nodeW / 2, cy: y + nodeH / 2});
+
+    const node = document.createElement('div');
+    node.className = `pfd-node node-${u.color}`;
+    node.style.left = x + 'px';
+    node.style.top = y + 'px';
+    node.style.width = nodeW + 'px';
+    node.innerHTML = `<div class="pn-icon">${u.icon}</div><div class="pn-name">${u.name}</div><div class="pn-detail">${(u.detail || '').split('\n')[0]}</div>`;
+    canvas.appendChild(node);
+  });
+
+  // Canvas size
+  const maxX = Math.max(...positions.map(p => p.x)) + nodeW + 40;
+  const maxY = Math.max(...positions.map(p => p.y)) + nodeH + 40;
+  canvas.style.minWidth = maxX + 'px';
+  canvas.style.minHeight = Math.max(450, maxY) + 'px';
+  svg.setAttribute('viewBox', `0 0 ${maxX} ${maxY}`);
+  svg.style.width = maxX + 'px';
+  svg.style.height = maxY + 'px';
+
+  // Draw connectors
+  for (let i = 0; i < positions.length - 1; i++) {
+    const a = positions[i], b = positions[i + 1];
+    const row_a = Math.floor(i / cols), row_b = Math.floor((i + 1) / cols);
+
+    if (row_a === row_b) {
+      // Same row: horizontal line
+      const dir = (row_a % 2 === 0) ? 1 : -1;
+      const x1 = dir > 0 ? a.x + nodeW : a.x;
+      const x2 = dir > 0 ? b.x : b.x + nodeW;
+      const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+      line.setAttribute('x1', x1); line.setAttribute('y1', a.cy);
+      line.setAttribute('x2', x2); line.setAttribute('y2', b.cy);
+      line.classList.add('flow-line');
+      svg.appendChild(line);
+    } else {
+      // Different row: go down
+      const x1 = a.cx, y1 = a.y + nodeH;
+      const x2 = b.cx, y2 = b.y;
+      const midY = (y1 + y2) / 2;
+      const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+      path.setAttribute('d', `M${x1},${y1} L${x1},${midY} L${x2},${midY} L${x2},${y2}`);
+      path.classList.add('flow-line');
+      svg.appendChild(path);
+    }
+  }
+
+  // Unit specs
+  renderPFDSpecs();
+}
+
+function renderPFDSpecs() {
+  const container = document.getElementById('pfdDetails');
+  const content = document.getElementById('pfdSpecsContent');
+  if (!STATE.processUnits.length) { container.style.display = 'none'; return; }
+  container.style.display = 'block';
+
+  let md = '### Unit-wise Design Specifications\n\n';
+  md += '| # | Unit | Details | Category |\n|---|------|---------|----------|\n';
+  STATE.processUnits.forEach((u, i) => {
+    const catMap = {cyan:'Core', green:'Biological', amber:'Chemical', rose:'Sludge/Thermal', purple:'Membrane'};
+    md += `| ${i + 1} | **${u.name}** | ${(u.detail || '—').replace(/\n/g, '; ')} | ${catMap[u.color] || 'Other'} |\n`;
+  });
+  content.innerHTML = renderMarkdown(md);
+}
+
+// ═══════════════════════════════════════════════════════════
+// MARKDOWN RENDERER
+// ═══════════════════════════════════════════════════════════
+
+function renderMarkdown(text) {
+  let html = text;
+  // Tables
+  html = html.replace(/^(\|.+\|)\n(\|[\-\|: ]+\|)\n((?:\|.+\|\n?)*)/gm, (match, header, sep, body) => {
+    const heads = header.split('|').filter(c => c.trim()).map(c => `<th>${c.trim()}</th>`).join('');
+    const rows = body.trim().split('\n').map(r => {
+      const cells = r.split('|').filter(c => c.trim()).map(c => `<td>${c.trim()}</td>`).join('');
+      return `<tr>${cells}</tr>`;
+    }).join('');
+    return `<table><thead><tr>${heads}</tr></thead><tbody>${rows}</tbody></table>`;
+  });
+  // Headers
+  html = html.replace(/^### (.+)$/gm, '<h3>$1</h3>');
+  html = html.replace(/^## (.+)$/gm, '<h3>$1</h3>');
+  // Bold
+  html = html.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+  // Inline code
+  html = html.replace(/`([^`]+)`/g, '<code>$1</code>');
+  // Lists
+  html = html.replace(/^- (.+)$/gm, '<li>$1</li>');
+  html = html.replace(/(<li>.*<\/li>\n?)+/g, (m) => `<ul>${m}</ul>`);
+  // Paragraphs
+  html = html.replace(/^(?!<[htulo])((?!<).+)$/gm, '<p>$1</p>');
+  // Clean empty lines
+  html = html.replace(/\n{2,}/g, '\n');
+  return html;
+}
+
+// ═══════════════════════════════════════════════════════════
+// SIMULATION ENGINE
+// ═══════════════════════════════════════════════════════════
+
+function runSimulationCalcs() {
+  const inp = STATE.inputs;
+  const Q = inp.flow;             // m³/day
+  const COD_in = inp.cod;         // mg/L
+  const BOD_in = inp.bod;         // mg/L
+  const TSS_in = inp.tss;         // mg/L
+  const TDS_in = inp.tds;
+  const NH3_in = inp.nh3;
+
+  // BOD/COD mass loads
+  const codLoadKg = COD_in * Q / 1000;   // kg/d
+  const bodLoadKg = BOD_in * Q / 1000;   // kg/d
+  const tssLoadKg = TSS_in * Q / 1000;
+
+  // Biological reactor sizing
+  const MLSS = 4000; // mg/L assumed MLSS
+  const FM = 0.25;   // F/M ratio kgBOD/kgMLSS·d
+  const bioVolume = bodLoadKg / (FM * MLSS / 1000); // m³
+  const HRT = bioVolume / (Q / 24); // hours
+  const SRT = 15; // days
+  const Yobs = 0.5; // observed yield kgVSS/kgBOD
+  const bioSludgeKg = Yobs * bodLoadKg; // kg VSS/d
+
+  // OLR (Organic Loading Rate)
+  const OLR = codLoadKg / bioVolume; // kgCOD/m³·d
+
+  // SVI
+  const SVI = 120; // mL/g typical
+
+  // Oxygen Requirements
+  // O2 = a'(BOD removed) + b'(MLVSS) - nitrification credit
+  const bodRemoved = bodLoadKg * 0.92;
+  const O2_carbonaceous = 1.2 * bodRemoved; // kg O2/d
+  const O2_nitrification = inp.nh3 > 20 ? 4.57 * (NH3_in * Q / 1000) * 0.9 : 0;
+  const totalO2 = O2_carbonaceous + O2_nitrification; // kg O2/d
+  
+  // Aeration: Standard oxygen transfer
+  const SOTE = 0.08; // 8% per meter for fine bubble
+  const depth = 4.5; // m
+  const OTE = SOTE * depth; // fraction
+  const airDensity = 1.2; // kg/m³
+  const O2_fraction = 0.232;
+  const airRequired = totalO2 / (OTE * airDensity * O2_fraction); // m³/d
+  const airFlowM3Hr = airRequired / 24;
+  const blowerPowerKW = (airFlowM3Hr * 1.013 * 100) / (1000 * 0.7 * 0.85); // approx
+
+  // Chemical Dosing
+  const alumDose = Math.round(TSS_in * 0.12 + (inp.color > 200 ? inp.color * 0.05 : 0) + 20); // mg/L
+  const alumKg = alumDose * Q / 1000;
+  const polymerDose = Math.max(0.5, Math.min(5, TSS_in * 0.003)); // mg/L
+  const polymerKg = polymerDose * Q / 1000;
+
+  // Sludge
+  const primarySludge = inp.tss > 500 ? tssLoadKg * 0.6 : tssLoadKg * 0.3;
+  const chemSludge = alumKg * 0.25;
+  const totalDrySludge = primarySludge + bioSludgeKg + chemSludge;
+  const wetSludgeM3 = totalDrySludge / 25; // at 2.5% solids
+
+  // COD removal efficiency
+  let codRemovalEff = 90;
+  if (STATE.processUnits.some(u => u.id.startsWith('ro'))) codRemovalEff = 98;
+  if (STATE.processUnits.some(u => u.id === 'uasb')) codRemovalEff = 95;
+
+  // Recovery
+  let waterRecovery = 100;
+  if (STATE.processUnits.some(u => u.id === 'ro1')) waterRecovery = 75;
+  if (STATE.processUnits.some(u => u.id === 'ro2')) waterRecovery = 85;
+  if (inp.mode === 'ZLD') waterRecovery = 95;
+
+  STATE.simulation = {
+    codLoadKg, bodLoadKg, tssLoadKg,
+    bioVolume: Math.round(bioVolume),
+    HRT: HRT.toFixed(1),
+    SRT,
+    MLSS,
+    FM: FM.toFixed(2),
+    OLR: OLR.toFixed(2),
+    SVI,
+    Yobs,
+    bioSludgeKg: bioSludgeKg.toFixed(1),
+    O2_carbonaceous: O2_carbonaceous.toFixed(1),
+    O2_nitrification: O2_nitrification.toFixed(1),
+    totalO2: totalO2.toFixed(1),
+    airFlowM3Hr: airFlowM3Hr.toFixed(0),
+    blowerPowerKW: blowerPowerKW.toFixed(1),
+    alumDose, alumKg: alumKg.toFixed(1),
+    polymerDose: polymerDose.toFixed(1), polymerKg: polymerKg.toFixed(2),
+    primarySludge: primarySludge.toFixed(1),
+    chemSludge: chemSludge.toFixed(1),
+    totalDrySludge: totalDrySludge.toFixed(1),
+    wetSludgeM3: wetSludgeM3.toFixed(1),
+    codRemovalEff,
+    waterRecovery
+  };
+}
+
+function renderSimulation() {
+  const s = STATE.simulation;
+  const inp = STATE.inputs;
+  if (!s.codLoadKg) return;
+
+  // Metrics
+  document.getElementById('simMetrics').innerHTML = `
+    <div class="metric-card mc-cyan"><div class="mc-label">COD Mass Load</div><div class="mc-value">${s.codLoadKg.toFixed(0)}</div><div class="mc-sub">kg/day</div></div>
+    <div class="metric-card mc-green"><div class="mc-label">BOD Mass Load</div><div class="mc-value">${s.bodLoadKg.toFixed(0)}</div><div class="mc-sub">kg/day</div></div>
+    <div class="metric-card mc-amber"><div class="mc-label">TSS Mass Load</div><div class="mc-value">${s.tssLoadKg.toFixed(0)}</div><div class="mc-sub">kg/day</div></div>
+    <div class="metric-card mc-cyan"><div class="mc-label">Bio Reactor Vol.</div><div class="mc-value">${s.bioVolume}</div><div class="mc-sub">m³</div></div>
+    <div class="metric-card mc-green"><div class="mc-label">Aeration HRT</div><div class="mc-value">${s.HRT}</div><div class="mc-sub">hours</div></div>
+    <div class="metric-card mc-rose"><div class="mc-label">Total Dry Sludge</div><div class="mc-value">${s.totalDrySludge}</div><div class="mc-sub">kg/day</div></div>
+  `;
+
+  // Bio parameters
+  document.getElementById('simBioParams').innerHTML = `
+    ${makeProgressBar('F/M Ratio', s.FM, 0.5, 'var(--green)', 'kgBOD/kgMLSS·d')}
+    ${makeProgressBar('OLR', s.OLR, 5, 'var(--cyan)', 'kgCOD/m³·d')}
+    ${makeProgressBar('MLSS', s.MLSS, 6000, 'var(--green)', 'mg/L')}
+    ${makeProgressBar('SVI', s.SVI, 250, s.SVI > 150 ? 'var(--amber)' : 'var(--green)', 'mL/g')}
+    ${makeProgressBar('SRT', s.SRT, 30, 'var(--cyan)', 'days')}
+    ${makeRadialHTML('Bio Yield', (s.Yobs * 100).toFixed(0), 'var(--green)')}
+  `;
+
+  // Aeration
+  document.getElementById('simAeration').innerHTML = `
+    ${makeProgressBar('O₂ Demand (Carbonaceous)', s.O2_carbonaceous, parseFloat(s.totalO2) * 1.2, 'var(--cyan)', 'kg/d')}
+    ${makeProgressBar('O₂ Demand (Nitrification)', s.O2_nitrification, parseFloat(s.totalO2) * 1.2, 'var(--amber)', 'kg/d')}
+    ${makeProgressBar('Total O₂ Requirement', s.totalO2, parseFloat(s.totalO2) * 1.3, 'var(--cyan)', 'kg/d')}
+    <div class="metric-card mc-cyan" style="margin-top:8px"><div class="mc-label">Air Flow Required</div><div class="mc-value">${s.airFlowM3Hr}</div><div class="mc-sub">m³/hr (fine bubble diffuser)</div></div>
+    <div class="metric-card mc-amber"><div class="mc-label">Blower Power (est.)</div><div class="mc-value">${s.blowerPowerKW}</div><div class="mc-sub">kW</div></div>
+  `;
+
+  // Chemical Dosing
+  document.getElementById('simChemDosing').innerHTML = `
+    <table class="data-table">
+      <thead><tr><th>Chemical</th><th class="num">Dose (mg/L)</th><th class="num">Consumption (kg/d)</th><th>Purpose</th></tr></thead>
+      <tbody>
+        <tr><td>Alum (Al₂(SO₄)₃)</td><td class="num">${s.alumDose}</td><td class="num">${s.alumKg}</td><td>Coagulation</td></tr>
+        <tr><td>Polymer (Anionic)</td><td class="num">${s.polymerDose}</td><td class="num">${s.polymerKg}</td><td>Flocculation</td></tr>
+        ${inp.ph < 6 ? `<tr><td>NaOH (Caustic Soda)</td><td class="num">${Math.round((7-inp.ph)*15)}</td><td class="num">${((7-inp.ph)*15*inp.flow/1000).toFixed(1)}</td><td>pH Correction</td></tr>` : ''}
+        ${inp.ph > 9.5 ? `<tr><td>H₂SO₄ (Sulfuric Acid)</td><td class="num">${Math.round((inp.ph-7)*20)}</td><td class="num">${((inp.ph-7)*20*inp.flow/1000).toFixed(1)}</td><td>pH Correction</td></tr>` : ''}
+        ${inp.phos > 5 ? `<tr><td>FeCl₃ (Ferric Chloride)</td><td class="num">${Math.round(inp.phos * 3)}</td><td class="num">${(inp.phos * 3 * inp.flow / 1000).toFixed(1)}</td><td>Phosphorus Removal</td></tr>` : ''}
+        <tr><td>NaOCl (Sodium Hypochlorite)</td><td class="num">5</td><td class="num">${(5 * inp.flow / 1000).toFixed(1)}</td><td>Disinfection</td></tr>
+      </tbody>
+    </table>
+  `;
+
+  // Sludge
+  document.getElementById('simSludge').innerHTML = `
+    ${makeProgressBar('Primary Sludge', s.primarySludge, parseFloat(s.totalDrySludge) * 1.2, 'var(--rose)', 'kg/d')}
+    ${makeProgressBar('Biological Sludge', s.bioSludgeKg, parseFloat(s.totalDrySludge) * 1.2, 'var(--amber)', 'kg/d')}
+    ${makeProgressBar('Chemical Sludge', s.chemSludge, parseFloat(s.totalDrySludge) * 1.2, 'var(--amber)', 'kg/d')}
+    <div class="metric-card mc-rose"><div class="mc-label">Wet Sludge Volume (@ 2.5% DS)</div><div class="mc-value">${s.wetSludgeM3}</div><div class="mc-sub">m³/day → Filter Press</div></div>
+  `;
+}
+
+function makeProgressBar(label, value, max, color, unit) {
+  const pct = Math.min(100, (parseFloat(value) / max) * 100);
+  return `<div class="progress-bar-wrap">
+    <div class="progress-bar-label"><span>${label}</span><span style="color:${color};font-weight:700">${value} ${unit}</span></div>
+    <div class="progress-bar-track"><div class="progress-bar-fill" style="width:${pct}%;background:${color}"></div></div>
+  </div>`;
+}
+
+function makeRadialHTML(label, pct, color) {
+  const r = 28, c = 2 * Math.PI * r;
+  const offset = c - (c * Math.min(parseFloat(pct), 100) / 100);
+  return `<div class="radial-wrap">
+    <div class="radial"><svg viewBox="0 0 72 72"><circle class="radial-bg" cx="36" cy="36" r="${r}"/><circle class="radial-fg" cx="36" cy="36" r="${r}" style="stroke:${color};stroke-dasharray:${c};stroke-dashoffset:${offset}"/></svg><div class="radial-text" style="color:${color}">${pct}%</div></div>
+    <div class="radial-info"><div class="ri-label">${label}</div><div class="ri-sub">Coefficient</div></div>
+  </div>`;
+}
+
+// ═══════════════════════════════════════════════════════════
+// FINANCIAL ENGINE
+// ═══════════════════════════════════════════════════════════
+
+function runFinancialModel() {
+  const inp = STATE.inputs;
+  const capex = parseFloat(document.getElementById('finCapex').value) || 150;
+  const opex = parseFloat(document.getElementById('finOpex').value) || 18;
+  const life = parseInt(document.getElementById('finLife').value) || 20;
+  const disc = parseFloat(document.getElementById('finDiscount').value) / 100 || 0.1;
+  const tariff = parseFloat(document.getElementById('finTariff').value) || 35;
+  const recovery = parseFloat(document.getElementById('finRecovery').value) / 100 || 0.8;
+  const days = parseInt(document.getElementById('finDays').value) || 330;
+  const flow = inp.flow || parseFloat(document.getElementById('inFlow').value) || 500;
+
+  // Annual revenue from water recovery
+  const annualRevenue = flow * recovery * tariff * days / 100000; // ₹ Lakhs
+  const annualNetCF = annualRevenue - opex;
+
+  // Cash flow table
+  const tbody = document.getElementById('finCashFlowBody');
+  tbody.innerHTML = '';
+  let cumulative = -capex;
+  let cumNPV = -capex;
+  let paybackYear = null;
+  let npvTotal = -capex;
+  let irrCFs = [-capex];
+
+  // Year 0
+  tbody.innerHTML += `<tr><td>0</td><td class="num">—</td><td class="num">—</td><td class="num" style="color:var(--rose)">-${capex.toFixed(1)}</td><td class="num" style="color:var(--rose)">${cumulative.toFixed(1)}</td><td class="num" style="color:var(--rose)">-${capex.toFixed(1)}</td><td class="num" style="color:var(--rose)">${cumNPV.toFixed(1)}</td></tr>`;
+
+  for (let y = 1; y <= life; y++) {
+    const discFactor = Math.pow(1 + disc, y);
+    const discCF = annualNetCF / discFactor;
+    cumulative += annualNetCF;
+    cumNPV += discCF;
+    npvTotal += discCF;
+    irrCFs.push(annualNetCF);
+
+    if (paybackYear === null && cumulative >= 0) {
+      paybackYear = y - 1 + (capex - (cumulative - annualNetCF < 0 ? 0 : cumulative - annualNetCF)) / annualNetCF;
+      // more precise
+      const prevCum = cumulative - annualNetCF;
+      paybackYear = y - 1 + Math.abs(prevCum) / annualNetCF;
+    }
+
+    const cumColor = cumulative >= 0 ? 'var(--green)' : 'var(--rose)';
+    const npvColor = cumNPV >= 0 ? 'var(--green)' : 'var(--rose)';
+    tbody.innerHTML += `<tr>
+      <td>${y}</td>
+      <td class="num" style="color:var(--green)">${annualRevenue.toFixed(1)}</td>
+      <td class="num" style="color:var(--rose)">${opex.toFixed(1)}</td>
+      <td class="num" style="color:var(--green)">${annualNetCF.toFixed(1)}</td>
+      <td class="num" style="color:${cumColor}">${cumulative.toFixed(1)}</td>
+      <td class="num">${discCF.toFixed(1)}</td>
+      <td class="num" style="color:${npvColor}">${cumNPV.toFixed(1)}</td>
+    </tr>`;
+  }
+
+  // IRR calculation (Newton's method)
+  const irr = calcIRR(irrCFs);
+
+  STATE.financial = { capex, opex, annualRevenue, annualNetCF, npvTotal, irr, paybackYear, life };
+
+  // Summary metrics
+  document.getElementById('finSummaryMetrics').innerHTML = `
+    <div class="metric-card mc-cyan"><div class="mc-label">NPV</div><div class="mc-value" style="color:${npvTotal>=0?'var(--green)':'var(--rose)'}">${npvTotal.toFixed(1)}</div><div class="mc-sub">₹ Lakhs</div></div>
+    <div class="metric-card mc-green"><div class="mc-label">IRR</div><div class="mc-value">${irr !== null ? irr.toFixed(1) + '%' : 'N/A'}</div><div class="mc-sub">Internal Rate of Return</div></div>
+    <div class="metric-card mc-amber"><div class="mc-label">Payback Period</div><div class="mc-value">${paybackYear !== null ? paybackYear.toFixed(1) : '>' + life}</div><div class="mc-sub">years</div></div>
+    <div class="metric-card mc-green"><div class="mc-label">Annual Revenue</div><div class="mc-value">${annualRevenue.toFixed(1)}</div><div class="mc-sub">₹ Lakhs/year</div></div>
+    <div class="metric-card mc-rose"><div class="mc-label">Annual OPEX</div><div class="mc-value">${opex.toFixed(1)}</div><div class="mc-sub">₹ Lakhs/year</div></div>
+    <div class="metric-card mc-cyan"><div class="mc-label">Net Annual CF</div><div class="mc-value">${annualNetCF.toFixed(1)}</div><div class="mc-sub">₹ Lakhs/year</div></div>
+  `;
+}
+
+function calcIRR(cfs) {
+  if (cfs.length < 2) return null;
+  let guess = 0.1;
+  for (let iter = 0; iter < 1000; iter++) {
+    let npv = 0, dnpv = 0;
+    for (let i = 0; i < cfs.length; i++) {
+      const denom = Math.pow(1 + guess, i);
+      npv += cfs[i] / denom;
+      if (i > 0) dnpv -= i * cfs[i] / Math.pow(1 + guess, i + 1);
+    }
+    if (Math.abs(dnpv) < 1e-12) break;
+    const newGuess = guess - npv / dnpv;
+    if (Math.abs(newGuess - guess) < 1e-8) { guess = newGuess; break; }
+    guess = newGuess;
+    if (guess < -0.99 || guess > 10) return null;
+  }
+  return guess * 100;
+}
+
+// ═══════════════════════════════════════════════════════════
+// VALIDATION ENGINE
+// ═══════════════════════════════════════════════════════════
+
+function runValidation() {
+  const inp = STATE.inputs;
+  const s = STATE.simulation;
+  const units = STATE.processUnits;
+  const checks = [];
+
+  const pass = (t, d) => checks.push({status:'pass', title:t, desc:d});
+  const warn = (t, d) => checks.push({status:'warn', title:t, desc:d});
+  const fail = (t, d) => checks.push({status:'fail', title:t, desc:d});
+
+  // Input completeness
+  if (inp.industry && inp.flow > 0) pass('Input Parameters Complete', `Industry: ${inp.industry}, Flow: ${inp.flow} m³/d`);
+  else fail('Incomplete Input Parameters', 'Industry type and flow rate are required.');
+
+  // COD Removal
+  const codOut = inp.cod * (1 - s.codRemovalEff / 100);
+  if (codOut <= inp.outCOD) pass('COD Discharge Compliance', `Estimated outlet COD: ${codOut.toFixed(0)} mg/L ≤ ${inp.outCOD} mg/L limit`);
+  else fail('COD Discharge Exceedance', `Estimated outlet COD: ${codOut.toFixed(0)} mg/L > ${inp.outCOD} mg/L limit. Add polishing treatment.`);
+
+  // BOD
+  const bodOut = inp.bod * 0.05;
+  if (bodOut <= inp.outBOD) pass('BOD Discharge Compliance', `Estimated outlet BOD: ${bodOut.toFixed(0)} mg/L ≤ ${inp.outBOD} mg/L`);
+  else fail('BOD Discharge Exceedance', `Estimated outlet BOD: ${bodOut.toFixed(0)} mg/L > ${inp.outBOD} mg/L. Increase aeration HRT.`);
+
+  // TSS
+  const tssOut = inp.tss * 0.08;
+  if (tssOut <= inp.outTSS) pass('TSS Discharge Compliance', `Estimated outlet TSS: ${tssOut.toFixed(0)} mg/L ≤ ${inp.outTSS} mg/L`);
+  else warn('TSS Near Limit', `Estimated outlet TSS: ${tssOut.toFixed(0)} mg/L approaching ${inp.outTSS} mg/L limit.`);
+
+  // TDS
+  const hasRO = units.some(u => u.id.startsWith('ro') || u.id === 'nf');
+  const tdsOut = hasRO ? inp.tds * 0.03 : inp.tds * 0.95;
+  if (tdsOut <= inp.outTDS) pass('TDS Discharge Compliance', `Estimated outlet TDS: ${tdsOut.toFixed(0)} mg/L ≤ ${inp.outTDS} mg/L`);
+  else fail('TDS Discharge Exceedance', `Estimated outlet TDS: ${tdsOut.toFixed(0)} mg/L > ${inp.outTDS} mg/L. RO/NF membrane required.`);
+
+  // pH
+  if (inp.ph >= inp.outpHMin && inp.ph <= inp.outpHMax) pass('pH Within Range', `Inlet pH ${inp.ph} within ${inp.outpHMin}-${inp.outpHMax} range.`);
+  else if (units.some(u => u.id === 'ph_correct')) pass('pH Correction Unit Active', `pH correction unit included for inlet pH ${inp.ph}.`);
+  else warn('pH Out of Range', `Inlet pH ${inp.ph} outside ${inp.outpHMin}-${inp.outpHMax}. Consider pH correction.`);
+
+  // Oil & Grease
+  if (inp.og > 100 && !units.some(u => u.id === 'daf')) {
+    fail('High O&G Without DAF', `O&G at ${inp.og} mg/L requires DAF unit.`);
+  } else if (inp.og > 100) {
+    pass('DAF Unit for High O&G', `DAF included for O&G level of ${inp.og} mg/L.`);
+  }
+
+  // F/M ratio
+  const fm = parseFloat(s.FM);
+  if (fm >= 0.1 && fm <= 0.5) pass('F/M Ratio Optimal', `F/M = ${s.FM} kgBOD/kgMLSS·d within 0.1-0.5 range.`);
+  else warn('F/M Ratio Outside Optimal', `F/M = ${s.FM}. Adjust MLSS or reactor volume.`);
+
+  // OLR
+  const olr = parseFloat(s.OLR);
+  if (olr <= 3.0) pass('OLR Within Limits', `OLR = ${s.OLR} kgCOD/m³·d ≤ 3.0`);
+  else warn('High Organic Loading Rate', `OLR = ${s.OLR} kgCOD/m³·d exceeds typical limit of 3.0. Increase reactor volume.`);
+
+  // Pipe velocity check (simplified)
+  const pipeArea = Math.PI * Math.pow(0.15, 2); // assume DN300 pipe
+  const velocity = (inp.flow / 86400) / pipeArea;
+  if (velocity >= 0.6 && velocity <= 3.0) pass('Pipe Velocity OK', `Flow velocity ~${velocity.toFixed(2)} m/s within 0.6-3.0 m/s limits.`);
+  else if (velocity < 0.6) warn('Low Pipe Velocity', `Velocity ${velocity.toFixed(2)} m/s < 0.6 m/s. Risk of sedimentation. Reduce pipe diameter.`);
+  else fail('Excessive Pipe Velocity', `Velocity ${velocity.toFixed(2)} m/s > 3.0 m/s. Increase pipe diameter to prevent erosion.`);
+
+  // SVI
+  if (s.SVI <= 150) pass('SVI Normal', `SVI = ${s.SVI} mL/g indicates good settleability.`);
+  else warn('Elevated SVI', `SVI = ${s.SVI} mL/g. Monitor for bulking sludge conditions.`);
+
+  // ZLD check
+  if (inp.mode === 'ZLD') {
+    if (units.some(u => u.id === 'mee') && units.some(u => u.id === 'atfd')) {
+      pass('ZLD Train Complete', 'MEE + ATFD + Crystallizer units present for zero liquid discharge.');
+    } else {
+      fail('Incomplete ZLD Train', 'ZLD mode requires MEE, ATFD, and Crystallizer units.');
+    }
+  }
+
+  STATE.validation = checks;
+
+  // Render
+  const container = document.getElementById('valList');
+  const iconMap = {pass: '✅', warn: '⚠️', fail: '❌'};
+  container.innerHTML = checks.map(c => `
+    <div class="val-item val-${c.status}">
+      <div class="val-icon">${iconMap[c.status]}</div>
+      <div class="val-content"><div class="val-title">${c.title}</div><div class="val-desc">${c.desc}</div></div>
+    </div>
+  `).join('');
+
+  const failCount = checks.filter(c => c.status === 'fail').length;
+  const warnCount = checks.filter(c => c.status === 'warn').length;
+  const badge = document.getElementById('valBadge');
+  if (failCount > 0) { badge.textContent = failCount + ' FAIL'; badge.className = 'card-badge badge-rose'; }
+  else if (warnCount > 0) { badge.textContent = warnCount + ' WARN'; badge.className = 'card-badge badge-amber'; }
+  else { badge.textContent = 'ALL PASS'; badge.className = 'card-badge badge-green'; }
+
+  // Diagnostics
+  const diagCard = document.getElementById('valDiagCard');
+  const diagContent = document.getElementById('valDiagContent');
+  const failures = checks.filter(c => c.status === 'fail');
+  if (failures.length > 0) {
+    diagCard.style.display = 'block';
+    let md = '### Corrective Actions Required\n\n';
+    failures.forEach((f, i) => {
+      md += `- **${f.title}**: ${f.desc}\n`;
+    });
+    md += '\n### Recommended Modifications\n\n';
+    if (failures.some(f => f.title.includes('TDS'))) md += '- Add **RO Membrane System** (single or double pass) to reduce TDS below discharge limits.\n';
+    if (failures.some(f => f.title.includes('COD'))) md += '- Increase biological reactor **HRT** or add **tertiary polishing** (ACF/Ozonation).\n';
+    if (failures.some(f => f.title.includes('BOD'))) md += '- Extend **aeration duration** or increase **MLSS concentration** in bioreactor.\n';
+    if (failures.some(f => f.title.includes('Pipe'))) md += '- Resize piping network. Use `DN` tables for velocity between `0.6–3.0 m/s`.\n';
+    if (failures.some(f => f.title.includes('ZLD'))) md += '- Include **MEE + ATFD + Crystallizer** stages for complete ZLD compliance.\n';
+    diagContent.innerHTML = renderMarkdown(md);
+  } else {
+    diagCard.style.display = 'none';
+  }
+}
+
+// ═══════════════════════════════════════════════════════════
+// DASHBOARD RENDERER
+// ═══════════════════════════════════════════════════════════
+
+function renderDashboard() {
+  const inp = STATE.inputs;
+  const s = STATE.simulation;
+  const f = STATE.financial;
+
+  document.getElementById('dashFlow').textContent = inp.flow || '—';
+  document.getElementById('dashCODRemoval').textContent = s.codRemovalEff ? s.codRemovalEff + '%' : '—';
+  document.getElementById('dashUnits').textContent = STATE.processUnits.length;
+  document.getElementById('dashRecovery').textContent = s.waterRecovery ? s.waterRecovery + '%' : '—';
+  document.getElementById('dashSludge').textContent = s.totalDrySludge || '—';
+  document.getElementById('dashCapex').textContent = f.capex ? f.capex.toFixed(0) : '—';
+
+  // Radials
+  const radials = document.getElementById('dashRadials');
+  radials.innerHTML = '';
+  if (s.codRemovalEff) {
+    radials.innerHTML += makeRadialHTML('COD Removal', s.codRemovalEff, 'var(--green)');
+    radials.innerHTML += makeRadialHTML('Water Recovery', s.waterRecovery, 'var(--cyan)');
+    const bodEff = 95;
+    radials.innerHTML += makeRadialHTML('BOD Removal', bodEff, 'var(--green)');
+  }
+
+  // Bars
+  const bars = document.getElementById('dashBars');
+  bars.innerHTML = '';
+  if (inp.cod) {
+    bars.innerHTML += makeProgressBar('COD', inp.cod, Math.max(inp.cod, 10000), 'var(--amber)', 'mg/L');
+    bars.innerHTML += makeProgressBar('BOD', inp.bod, Math.max(inp.cod, 10000), 'var(--green)', 'mg/L');
+    bars.innerHTML += makeProgressBar('TSS', inp.tss, 5000, 'var(--cyan)', 'mg/L');
+    bars.innerHTML += makeProgressBar('TDS', inp.tds, 15000, 'var(--purple)', 'mg/L');
+    bars.innerHTML += makeProgressBar('NH₃-N', inp.nh3, 200, 'var(--amber)', 'mg/L');
+    bars.innerHTML += makeProgressBar('O&G', inp.og, 500, 'var(--rose)', 'mg/L');
+  }
+
+  // Validation summary
+  const valSummary = document.getElementById('dashValidationSummary');
+  if (STATE.validation.length > 0) {
+    const fails = STATE.validation.filter(v => v.status === 'fail');
+    const warns = STATE.validation.filter(v => v.status === 'warn');
+    const passes = STATE.validation.filter(v => v.status === 'pass');
+    let html = '';
+    if (fails.length) html += `<div class="val-item val-fail"><div class="val-icon">❌</div><div class="val-content"><div class="val-title">${fails.length} Failed Checks</div><div class="val-desc">${fails.map(f=>f.title).join(', ')}</div></div></div>`;
+    if (warns.length) html += `<div class="val-item val-warn"><div class="val-icon">⚠️</div><div class="val-content"><div class="val-title">${warns.length} Warnings</div><div class="val-desc">${warns.map(w=>w.title).join(', ')}</div></div></div>`;
+    html += `<div class="val-item val-pass"><div class="val-icon">✅</div><div class="val-content"><div class="val-title">${passes.length} Checks Passed</div><div class="val-desc">All within operational bounds.</div></div></div>`;
+    valSummary.innerHTML = html;
+  }
+}
+
+// ═══════════════════════════════════════════════════════════
+// REPORT GENERATOR
+// ═══════════════════════════════════════════════════════════
+
+function renderReport() {
+  const inp = STATE.inputs;
+  const s = STATE.simulation;
+  const f = STATE.financial;
+  const units = STATE.processUnits;
+
+  let md = `### AQUA-AI Design Report\n\n`;
+  md += `**Project**: ${inp.industry} ${inp.mode} Plant\n\n`;
+  md += `**Design Capacity**: \`${inp.flow} m³/day\`\n\n`;
+  md += `**Generated**: ${new Date().toLocaleDateString()} ${new Date().toLocaleTimeString()}\n\n`;
+
+  md += `### Influent Characterization\n\n`;
+  md += `| Parameter | Value | Unit |\n|---|---|---|\n`;
+  md += `| COD | ${inp.cod} | mg/L |\n`;
+  md += `| BOD | ${inp.bod} | mg/L |\n`;
+  md += `| TSS | ${inp.tss} | mg/L |\n`;
+  md += `| TDS | ${inp.tds} | mg/L |\n`;
+  md += `| pH | ${inp.ph} | — |\n`;
+  md += `| NH₃-N | ${inp.nh3} | mg/L |\n`;
+  md += `| Phosphorus | ${inp.phos} | mg/L |\n`;
+  md += `| Oil & Grease | ${inp.og} | mg/L |\n`;
+  md += `| Temperature | ${inp.temp} | °C |\n\n`;
+
+  md += `### Process Train (${units.length} Units)\n\n`;
+  md += `| # | Unit | Category | Key Specification |\n|---|---|---|---|\n`;
+  units.forEach((u, i) => {
+    const catMap = {cyan:'Core', green:'Biological', amber:'Chemical', rose:'Sludge/Thermal', purple:'Membrane'};
+    md += `| ${i+1} | **${u.name}** | ${catMap[u.color]} | ${(u.detail||'—').replace(/\n/g,'; ')} |\n`;
+  });
+
+  md += `\n### Engineering Parameters\n\n`;
+  md += `- **Biological Reactor Volume**: \`${s.bioVolume} m³\`\n`;
+  md += `- **HRT**: \`${s.HRT} hours\`\n`;
+  md += `- **F/M Ratio**: \`${s.FM} kgBOD/kgMLSS·d\`\n`;
+  md += `- **OLR**: \`${s.OLR} kgCOD/m³·d\`\n`;
+  md += `- **Total O₂ Demand**: \`${s.totalO2} kg/d\`\n`;
+  md += `- **Air Flow**: \`${s.airFlowM3Hr} m³/hr\`\n`;
+  md += `- **Daily Dry Sludge**: \`${s.totalDrySludge} kg/d\`\n`;
+  md += `- **COD Removal Efficiency**: \`${s.codRemovalEff}%\`\n`;
+  md += `- **Water Recovery**: \`${s.waterRecovery}%\`\n\n`;
+
+  if (f.capex) {
+    md += `### Financial Summary\n\n`;
+    md += `| Metric | Value |\n|---|---|\n`;
+    md += `| CAPEX | ₹ ${f.capex.toFixed(1)} Lakhs |\n`;
+    md += `| Annual OPEX | ₹ ${f.opex.toFixed(1)} Lakhs |\n`;
+    md += `| Annual Revenue | ₹ ${f.annualRevenue.toFixed(1)} Lakhs |\n`;
+    md += `| NPV | ₹ ${f.npvTotal.toFixed(1)} Lakhs |\n`;
+    md += `| IRR | ${f.irr !== null ? f.irr.toFixed(1) + '%' : 'N/A'} |\n`;
+    md += `| Payback Period | ${f.paybackYear !== null ? f.paybackYear.toFixed(1) + ' years' : 'N/A'} |\n`;
+  }
+
+  md += `\n### Validation Summary\n\n`;
+  STATE.validation.forEach(v => {
+    const icon = v.status === 'pass' ? '✅' : v.status === 'warn' ? '⚠️' : '❌';
+    md += `- ${icon} **${v.title}**: ${v.desc}\n`;
+  });
+
+  document.getElementById('reportContent').innerHTML = renderMarkdown(md);
+}
+
+function exportReport() {
+  if (!STATE.designed) { alert('Run AI Design Engine first.'); return; }
+  renderReport();
+  const content = document.getElementById('reportContent').innerText;
+  const blob = new Blob([content], {type: 'text/plain'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `AQUA-AI_Report_${STATE.inputs.industry}_${STATE.inputs.flow}m3d.txt`;
+  a.click();
+}
+
+function resetAll() {
+  if (!confirm('Reset all inputs and designs?')) return;
+  STATE.designed = false;
+  STATE.processUnits = [];
+  STATE.simulation = {};
+  STATE.financial = {};
+  STATE.validation = [];
+  document.querySelectorAll('.form-input, .form-select').forEach(el => {
+    if (el.defaultValue !== undefined) el.value = el.defaultValue;
+  });
+  collectInputs();
+  navigateTo('dashboard', document.querySelector('[data-page=dashboard]'));
+  // Reset dashboard
+  ['dashFlow','dashCODRemoval','dashRecovery','dashSludge','dashCapex'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.textContent = '—';
+  });
+  document.getElementById('dashUnits').textContent = '0';
+  document.getElementById('dashRadials').innerHTML = '';
+  document.getElementById('dashBars').innerHTML = '';
+  document.getElementById('dashValidationSummary').innerHTML = '<div class="val-item val-warn"><div class="val-icon">⚠️</div><div class="val-content"><div class="val-title">No design inputs configured</div><div class="val-desc">Navigate to AI Design Engine to configure project parameters.</div></div></div>';
+}
+
+// ═══════════════════════════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════════════════════════
+
+document.addEventListener('DOMContentLoaded', () => {
+  collectInputs();
+  navigateTo('dashboard', document.querySelector('[data-page=dashboard]'));
+});
+</script>
+</body>
+</html>
